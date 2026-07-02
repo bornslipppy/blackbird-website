@@ -1056,14 +1056,13 @@
     <div class="hero-demo-video">
       <video
         class="hero-demo-video__media"
-        src="assets/bbrid-web.mp4"
+        src="assets/bbrid-fable-demo.mp4"
         autoplay
-        loop
         muted
         playsinline
         controls
         preload="auto"
-        aria-label="Blackbird product demo (playing on loop)"
+        aria-label="Blackbird product demos (playing in sequence on loop)"
       >
         Your browser does not support embedded video.
       </video>
@@ -1118,6 +1117,37 @@
 </footer>
 
 <script>
+  // ──────────────────────────────────────────────
+  // Hero demo video playlist (endless loop, two clips in sequence)
+  // ──────────────────────────────────────────────
+  (function initHeroDemoPlaylist() {
+    const video = document.querySelector('.hero-demo-video__media');
+    if (!video) return;
+
+    const playlist = [
+      'assets/bbrid-fable-demo.mp4',
+      'assets/bbrid-web.mp4',
+    ];
+    let index = 0;
+
+    function playClip(i) {
+      index = ((i % playlist.length) + playlist.length) % playlist.length;
+      if (video.getAttribute('src') !== playlist[index]) {
+        video.src = playlist[index];
+        video.load();
+      }
+      video.play().catch(() => {});
+    }
+
+    video.addEventListener('ended', () => {
+      playClip(index + 1);
+    });
+
+    video.addEventListener('error', () => {
+      if (playlist.length > 1) playClip(index + 1);
+    });
+  })();
+
   // ──────────────────────────────────────────────
   // White grid lines in the cursor spotlight (no wash layer)
   // ──────────────────────────────────────────────

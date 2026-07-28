@@ -24,42 +24,42 @@
 <style>
   @font-face {
     font-family: "Sofia Pro";
-    src: url("assets/fonts/SofiaPro-Regular.otf") format("opentype");
+    src: url("assets/fonts/SofiaPro-Regular.woff2") format("woff2");
     font-weight: 400;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
     font-family: "Sofia Pro";
-    src: url("assets/fonts/SofiaPro-Light.otf") format("opentype");
+    src: url("assets/fonts/SofiaPro-Light.woff2") format("woff2");
     font-weight: 300;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
     font-family: "Sofia Pro";
-    src: url("assets/fonts/SofiaPro-Medium.otf") format("opentype");
+    src: url("assets/fonts/SofiaPro-Medium.woff2") format("woff2");
     font-weight: 500;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
     font-family: "Sofia Pro";
-    src: url("assets/fonts/SofiaPro-Bold.otf") format("opentype");
+    src: url("assets/fonts/SofiaPro-Bold.woff2") format("woff2");
     font-weight: 700;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
     font-family: "Sofia Pro";
-    src: url("assets/fonts/SofiaPro-Italic.otf") format("opentype");
+    src: url("assets/fonts/SofiaPro-Italic.woff2") format("woff2");
     font-weight: 400;
     font-style: italic;
     font-display: swap;
   }
   @font-face {
     font-family: "VC Garamond Condensed";
-    src: url("assets/fonts/VCGaramondCondensed-Bold-Trial.otf") format("opentype");
+    src: url("assets/fonts/VCGaramondCondensed-Bold-Trial.woff2") format("woff2");
     font-weight: 700;
     font-style: normal;
     font-display: swap;
@@ -261,7 +261,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: max(env(safe-area-inset-top, 0px), clamp(20px, 3vw, 36px));
+    padding-top: max(env(safe-area-inset-top, 0px), clamp(10px, 1.6vw, 20px));
     padding-right: clamp(20px, 4vw, 56px);
     padding-bottom: clamp(20px, 3vw, 36px);
     padding-left: clamp(20px, 4vw, 56px);
@@ -279,7 +279,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   .brand .mark {
-    width: 28px; height: auto; display: block;
+    width: 36px; height: auto; display: block;
     color: var(--ink);
     transform-origin: 50% 50%;
     animation: logoFloat 4.5s ease-in-out infinite;
@@ -299,7 +299,7 @@
   .brand .wordmark {
     font-family: var(--font-wordmark);
     font-weight: 700;
-    font-size: clamp(15px, 1.25vw, 18px);
+    font-size: clamp(18px, 1.55vw, 23px);
     letter-spacing: 0.005em;
     line-height: 1;
     margin-top: 2px;
@@ -366,7 +366,7 @@
     font-family: var(--font);
     font-weight: 400;
     /* Tied to min(vw, vh) so it scales DOWN on short laptops, not just narrow phones */
-    font-size: clamp(40px, min(7.5vw, 14vh), 128px);
+    font-size: clamp(34px, min(6.4vw, 12vh), 108px);
     line-height: 0.92;
     letter-spacing: -0.015em;
     text-align: center;
@@ -469,7 +469,7 @@
     color: var(--ink-soft);
     text-align: center;
     max-width: 46ch;
-    margin: clamp(8px, 1.2vh, 16px) 0 clamp(10px, 1.6vh, 22px);
+    margin: clamp(26px, 4.8vh, 60px) 0 clamp(10px, 1.6vh, 22px);
     text-wrap: pretty;
   }
   p.sub .sub-line {
@@ -1297,18 +1297,24 @@
       // Measure each word's natural offset within the container.
       // offsetLeft/Top give us the value directly — no rect math,
       // no coordinate-space confusion.
+      // Widths come from getBoundingClientRect, not offsetWidth: offsetWidth
+      // rounds to whole pixels, and re-applying a rounded-down width is enough
+      // to push a line that only just fit onto an extra row — which locks the
+      // container taller than the text and leaves a dead gap under the
+      // headline. Offsets stay integer; they only position, never wrap.
+      const containerBox = container.getBoundingClientRect();
       const measurements = wordEls.map(el => ({
         el,
         x: el.offsetLeft,
         y: el.offsetTop,
-        w: el.offsetWidth,
-        h: el.offsetHeight,
+        w: el.getBoundingClientRect().width,
+        h: el.getBoundingClientRect().height,
       }));
 
       // Lock the container's box so it doesn't collapse when its
       // flex children all go absolute.
-      container.style.width = container.offsetWidth + 'px';
-      container.style.height = container.offsetHeight + 'px';
+      container.style.width = containerBox.width + 'px';
+      container.style.height = containerBox.height + 'px';
 
       // Apply absolute positioning.
       measurements.forEach(m => {
@@ -1435,7 +1441,20 @@
     liftAllWords();
     wordEls.forEach(bindDrag);
 
-    if (document.fonts && document.fonts.ready) {
+    // document.fonts.ready can resolve before a swapped-in face has
+    // actually been applied, which leaves the container locked at the
+    // fallback's metrics — the fallback wraps to more rows than the real
+    // face, so the headline keeps a tall dead gap under it. Explicitly
+    // load the face this headline renders in, then relayout on the next
+    // frame once the swap has painted.
+    if (document.fonts && document.fonts.load) {
+      const cs = getComputedStyle(headline);
+      const spec = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+      Promise.all([
+        document.fonts.load(spec).catch(() => {}),
+        document.fonts.ready,
+      ]).then(() => requestAnimationFrame(relayout));
+    } else if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(relayout);
     }
 

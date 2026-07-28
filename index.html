@@ -23,38 +23,45 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml" />
 <style>
   @font-face {
-    font-family: "Helvetica Neue LT Std";
-    src: url("assets/fonts/HelveticaNeueLTStd-Roman.otf") format("opentype");
+    font-family: "Sofia Pro";
+    src: url("assets/fonts/SofiaPro-Regular.otf") format("opentype");
     font-weight: 400;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
-    font-family: "Helvetica Neue LT Std";
-    src: url("assets/fonts/HelveticaNeueLTStd-Lt.otf") format("opentype");
+    font-family: "Sofia Pro";
+    src: url("assets/fonts/SofiaPro-Light.otf") format("opentype");
     font-weight: 300;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
-    font-family: "Helvetica Neue LT Std";
-    src: url("assets/fonts/HelveticaNeueLTStd-Md.otf") format("opentype");
+    font-family: "Sofia Pro";
+    src: url("assets/fonts/SofiaPro-Medium.otf") format("opentype");
     font-weight: 500;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
-    font-family: "Helvetica Neue LT Std";
-    src: url("assets/fonts/HelveticaNeueLTStd-Bd.otf") format("opentype");
+    font-family: "Sofia Pro";
+    src: url("assets/fonts/SofiaPro-Bold.otf") format("opentype");
     font-weight: 700;
     font-style: normal;
     font-display: swap;
   }
   @font-face {
-    font-family: "Helvetica Neue LT Std";
-    src: url("assets/fonts/HelveticaNeueLTStd-It.otf") format("opentype");
+    font-family: "Sofia Pro";
+    src: url("assets/fonts/SofiaPro-Italic.otf") format("opentype");
     font-weight: 400;
     font-style: italic;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "VC Garamond Condensed";
+    src: url("assets/fonts/VCGaramondCondensed-Bold-Trial.otf") format("opentype");
+    font-weight: 700;
+    font-style: normal;
     font-display: swap;
   }
 
@@ -74,7 +81,8 @@
     --field-hi: rgba(255, 248, 232, 0.10);
     --danger: #e8a87c;
     --sub-hover: #bdbdbd;
-    --font: "Helvetica Neue LT Std", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font: "Sofia Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-wordmark: "VC Garamond Condensed", Garamond, "Times New Roman", serif;
   }
 
   * { box-sizing: border-box; }
@@ -289,7 +297,7 @@
     border-radius: 6px;
   }
   .brand .wordmark {
-    font-family: var(--font);
+    font-family: var(--font-wordmark);
     font-weight: 700;
     font-size: clamp(15px, 1.25vw, 18px);
     letter-spacing: 0.005em;

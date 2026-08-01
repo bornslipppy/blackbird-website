@@ -1142,13 +1142,13 @@
     const video = document.querySelector('.hero-demo-video__media');
     if (!video) return;
 
-    // ?v=2 is a cache-buster, not decoration. These files briefly shipped as
-    // 132-byte Git LFS pointers, and they are served immutable for a year — so
-    // any browser that loaded the site in that window has the broken stub
-    // pinned and will not revalidate it. A new URL sidesteps that cache.
+    // The ?v= tags are cache-busters, not decoration. Assets are served
+    // immutable for a year, so a file whose bytes change at the same path
+    // would keep serving the stale copy. Bump a clip's tag whenever its bytes
+    // change: v2 cleared the 132-byte Git LFS stubs, v3 is the re-encode.
     const playlist = [
       'assets/bbrid-fable-demo.mp4?v=2',
-      'assets/bbrid-web.mp4?v=2',
+      'assets/bbrid-web.mp4?v=3',
     ];
     let index = 0;
 
@@ -1156,6 +1156,33 @@
       const p = video.play();
       if (p && p.catch) p.catch(() => {});
     }
+
+    // Warm the next clip while the current one plays, so the handover isn't a
+    // cold multi-megabyte fetch. Held in an array so the download isn't
+    // collected mid-flight, and keyed by URL so a looping playlist fetches
+    // each clip once.
+    const warmed = new Set();
+    const warmers = [];
+    let warmTimer;
+
+    function warmNextClip() {
+      const next = playlist[(index + 1) % playlist.length];
+      if (warmed.has(next)) return;
+      warmed.add(next);
+      const warm = document.createElement('video');
+      warm.preload = 'auto';
+      warm.muted = true;
+      warm.src = next;
+      warm.load();
+      warmers.push(warm);
+    }
+
+    // Only start once the visible clip is actually running, so the prefetch
+    // never competes with it for bandwidth during page load.
+    video.addEventListener('playing', () => {
+      clearTimeout(warmTimer);
+      warmTimer = setTimeout(warmNextClip, 3000);
+    });
 
     function playClip(i) {
       index = ((i % playlist.length) + playlist.length) % playlist.length;
